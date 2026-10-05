@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "39515795869",
+    "project_id": "fir-authentication-pmp",
+    "storage_bucket": "fir-authentication-pmp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:39515795869:android:24a6f21080ca899632ff74",
+        "android_client_info": {
+          "package_name": "com.example.pertemuan_3"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsE1X0tKEeCFvYzngYafawCGKOSDariAw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

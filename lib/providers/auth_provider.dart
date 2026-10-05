@@ -1,29 +1,78 @@
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 
 class AuthProvider extends ChangeNotifier {
-  // 1: state login.
-  bool _isAuthenticated = false;
+  // State pengguna sekarang berupa objek User? dari Firebase,
+  // menggantikan token dummy pada Pertemuan 3.
+  User? _user;
   String? _token;
 
-  bool get isAuthenticated => _isAuthenticated;
+  User? get user => _user;
+  bool get isAuthenticated => _user != null;
   String? get token => _token;
 
-  Future<bool> login(String email, String password) async {
-    // 2: simulasi request login (delay 1 detik).
-    await Future.delayed(const Duration(seconds: 1));
-    if (email.isNotEmpty && password.length >= 6) {
-      _isAuthenticated = true;
-      _token = 'token_auth_dummy_12345';
-      notifyListeners();
-      return true;
-    }
-    return false;
+  // Dipanggil oleh listener authStateChanges() di main.dart.
+  Future<void> setUser(User? user) async {
+    _user = user;
+    _token = user == null ? null : await user.getIdToken();
+    notifyListeners();
   }
 
-  void logout() {
-    // 3: reset state + notifyListeners().
-    _isAuthenticated = false;
-    _token = null;
-    notifyListeners();
+  // 1. Pendaftaran (Register)
+  Future<String?> register(String email, String password) async {
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return _pesanError(e);
+    }
+  }
+
+  // 2. Masuk (Login)
+  Future<String?> login(String email, String password) async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return _pesanError(e);
+    }
+  }
+
+  // 3. Keluar (Logout)
+  Future<void> logout() async {
+    await FirebaseAuth.instance.signOut();
+  }
+
+  // Pengolahan pesan error berbahasa Indonesia.
+  String _pesanError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-email':
+        return 'Format email tidak valid.';
+      case 'email-already-in-use':
+        return 'Email sudah terdaftar. Silakan login.';
+      case 'weak-password':
+        return 'Kata sandi terlalu lemah (minimal 6 karakter).';
+      case 'user-not-found':
+        return 'Akun tidak ditemukan. Silakan daftar terlebih dahulu.';
+      case 'wrong-password':
+      case 'invalid-credential':
+        return 'Email atau kata sandi salah.';
+      case 'user-disabled':
+        return 'Akun ini dinonaktifkan.';
+      case 'too-many-requests':
+        return 'Terlalu banyak percobaan. Coba lagi beberapa saat.';
+      case 'network-request-failed':
+        return 'Tidak ada koneksi internet.';
+      case 'operation-not-allowed':
+        return 'Metode Email/Password belum diaktifkan di Firebase Console.';
+      default:
+        return e.message ?? 'Terjadi kesalahan. Silakan coba lagi.';
+    }
   }
 }

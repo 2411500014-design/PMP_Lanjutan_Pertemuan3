@@ -13,16 +13,19 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isRegisterMode = false;
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleSubmit() async {
     setState(() => _isLoading = true);
-    final success = await Provider.of<AuthProvider>(context, listen: false)
-        .login(_emailController.text, _passwordController.text);
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final error = _isRegisterMode
+        ? await auth.register(_emailController.text, _passwordController.text)
+        : await auth.login(_emailController.text, _passwordController.text);
     if (!mounted) return;
     setState(() => _isLoading = false);
-    if (!success) {
+    if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login Gagal! Password min 6 karakter.')),
+        SnackBar(content: Text(error)),
       );
     }
   }
@@ -30,7 +33,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login Provider')),
+      appBar: AppBar(
+        title: Text(_isRegisterMode ? 'Daftar Akun' : 'Login Provider'),
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -43,12 +48,14 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Selamat Datang',
+                _isRegisterMode ? 'Buat Akun Baru' : 'Selamat Datang',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 4),
               Text(
-                'Masuk untuk melihat daftar pengguna',
+                _isRegisterMode
+                    ? 'Daftar dengan email dan kata sandi'
+                    : 'Masuk untuk melihat daftar pengguna',
                 style: Theme.of(context)
                     .textTheme
                     .bodyMedium
@@ -97,19 +104,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: _isLoading ? null : _handleLogin,
+                  onPressed: _isLoading ? null : _handleSubmit,
                   child: _isLoading
                       ? const SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Login'),
+                      : Text(_isRegisterMode ? 'Daftar' : 'Login'),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: _isLoading
+                    ? null
+                    : () => setState(() => _isRegisterMode = !_isRegisterMode),
+                child: Text(
+                  _isRegisterMode
+                      ? 'Sudah punya akun? Login'
+                      : 'Belum punya akun? Daftar',
+                ),
+              ),
+              const SizedBox(height: 8),
               Text(
-                'Demo: email apa saja + password min 6 karakter',
+                'Gunakan email valid + kata sandi minimal 6 karakter',
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
